@@ -1,0 +1,135 @@
+{
+  "rabbit_version": "3.12.0",
+  "rabbitmq_version": "3.12.0",
+  "product_name": "RabbitMQ",
+  "users": [
+    {
+      "name": "guest",
+      "password_hash": "8LOwjC8g6xNrMDO7pAyVBFbQYAkK6T4LnfFJfC9BQ=",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    { "name": "/" },
+    { "name": "bank-security" }
+  ],
+  "permissions": [
+    {
+      "user": "guest",
+      "vhost": "bank-security",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "bank.alerts.topic",
+      "vhost": "bank-security",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "bank.alerts.fanout",
+      "vhost": "bank-security",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "bank.alerts.direct",
+      "vhost": "bank-security",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "queue.fraud.detection",
+      "vhost": "bank-security",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-message-ttl": 86400000 }
+    },
+    {
+      "name": "queue.audit.log",
+      "vhost": "bank-security",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-message-ttl": 86400000 }
+    },
+    {
+      "name": "queue.dashboard.fanout",
+      "vhost": "bank-security",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-message-ttl": 86400000 }
+    },
+    {
+      "name": "queue.user.direct",
+      "vhost": "bank-security",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-message-ttl": 86400000 }
+    }
+  ],
+  "bindings": [
+    {
+      "source": "bank.alerts.topic",
+      "vhost": "bank-security",
+      "destination": "queue.fraud.detection",
+      "destination_type": "queue",
+      "routing_key": "critical.#",
+      "arguments": {}
+    },
+    {
+      "source": "bank.alerts.topic",
+      "vhost": "bank-security",
+      "destination": "queue.fraud.detection",
+      "destination_type": "queue",
+      "routing_key": "high.#",
+      "arguments": {}
+    },
+    {
+      "source": "bank.alerts.topic",
+      "vhost": "bank-security",
+      "destination": "queue.audit.log",
+      "destination_type": "queue",
+      "routing_key": "*.frauddetection",
+      "arguments": {}
+    },
+    {
+      "source": "bank.alerts.topic",
+      "vhost": "bank-security",
+      "destination": "queue.audit.log",
+      "destination_type": "queue",
+      "routing_key": "*.loginattempt",
+      "arguments": {}
+    },
+    {
+      "source": "bank.alerts.fanout",
+      "vhost": "bank-security",
+      "destination": "queue.dashboard.fanout",
+      "destination_type": "queue",
+      "routing_key": "",
+      "arguments": {}
+    },
+    {
+      "source": "bank.alerts.direct",
+      "vhost": "bank-security",
+      "destination": "queue.user.direct",
+      "destination_type": "queue",
+      "routing_key": "user.USR001",
+      "arguments": {}
+    }
+  ]
+}
