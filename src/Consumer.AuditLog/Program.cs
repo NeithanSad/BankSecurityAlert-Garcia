@@ -22,7 +22,7 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 Console.ForegroundColor = ConsoleColor.Green;
 Console.WriteLine("╔══════════════════════════════════════════════════════╗");
-Console.WriteLine("║  📋  CONSUMER 3: COMPLIANCE AUDIT LOG               ║");
+Console.WriteLine("║       CONSUMER 3: COMPLIANCE AUDIT LOG               ║");
 Console.WriteLine("║     Topic Exchange | *.frauddetection / *.loginattempt║");
 Console.WriteLine("╚══════════════════════════════════════════════════════╝\n");
 Console.ResetColor();
@@ -31,4 +31,4 @@ using var consumer = new AuditLogConsumer();
 using var cts      = new CancellationTokenSource();
 
 consumer.StartConsuming(cts.Token);
-Console.WriteLine("\n[AuditLog] Detenido. 👋");
+Console.WriteLine("\n[AuditLog] Detenido. ");

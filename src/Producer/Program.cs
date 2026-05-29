@@ -5,7 +5,7 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 Console.ForegroundColor = ConsoleColor.Cyan;
 Console.WriteLine("╔══════════════════════════════════════════════════════╗");
-Console.WriteLine("║     🏦  BANK SECURITY ALERT — PRODUCER              ║");
+Console.WriteLine("║       BANK SECURITY ALERT — PRODUCER                 ║");
 Console.WriteLine("║     Exchange: Topic + Fanout + Direct                ║");
 Console.WriteLine("╚══════════════════════════════════════════════════════╝");
 Console.ResetColor();
@@ -16,7 +16,7 @@ using var topology = new RabbitMQTopology();
 var publisher = new AlertPublisher(topology.Channel);
 
 Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine("OK ✅");
+Console.WriteLine("OK");
 Console.ResetColor();
 
 Console.WriteLine("\nPresiona [ENTER] para enviar una alerta, [A] para envío automático, [Q] para salir.\n");
@@ -50,7 +50,7 @@ while (true)
         _                                               => ConsoleColor.Gray
     };
 
-    Console.WriteLine($"\n📤 Publicando alerta:");
+    Console.WriteLine($"\nPublicando alerta:");
     Console.WriteLine($"   {alert}");
     Console.WriteLine($"   TopicKey={alert.TopicRoutingKey} | DirectKey={alert.DirectRoutingKey}");
     Console.ResetColor();
@@ -62,4 +62,4 @@ while (true)
     Console.ResetColor();
 }
 
-Console.WriteLine("\n[Producer] Conexión cerrada. ¡Hasta pronto! 👋");
+Console.WriteLine("\n[Producer] Conexión cerrada. ¡Hasta pronto!");

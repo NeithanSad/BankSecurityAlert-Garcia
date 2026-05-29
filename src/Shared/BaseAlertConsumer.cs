@@ -50,7 +50,7 @@ public abstract class BaseAlertConsumer : IDisposable
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"  ❌ Error procesando mensaje: {ex.Message}");
+                Console.WriteLine($"   Error procesando mensaje: {ex.Message}");
                 Console.ResetColor();
 
                 // Reject and requeue=false → goes to dead-letter (if configured)
@@ -61,7 +61,7 @@ public abstract class BaseAlertConsumer : IDisposable
         Channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
 
         Console.ForegroundColor = AccentColor;
-        Console.WriteLine($"[{ConsumerName}] 👂 Escuchando en cola '{QueueName}'...");
+        Console.WriteLine($"[{ConsumerName}]  Escuchando en cola '{QueueName}'...");
         Console.WriteLine($"[{ConsumerName}] Presiona [Q] para salir.\n");
         Console.ResetColor();
 
@@ -79,14 +79,14 @@ public abstract class BaseAlertConsumer : IDisposable
     private void PrintHeader(string routingKey)
     {
         Console.ForegroundColor = AccentColor;
-        Console.WriteLine($"\n[{ConsumerName}] 📨 Mensaje recibido | routingKey={routingKey}");
+        Console.WriteLine($"\n[{ConsumerName}]  Mensaje recibido | routingKey={routingKey}");
         Console.ResetColor();
     }
 
     private void PrintFooter()
     {
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine($"  ✅ ACK enviado");
+        Console.WriteLine($"   ACK enviado");
         Console.ResetColor();
     }
 

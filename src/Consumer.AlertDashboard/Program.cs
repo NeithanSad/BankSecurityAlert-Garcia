@@ -19,7 +19,7 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 Console.ForegroundColor = ConsoleColor.Cyan;
 Console.WriteLine("╔══════════════════════════════════════════════════════╗");
-Console.WriteLine("║  📊  CONSUMER 2: REAL-TIME ALERT DASHBOARD          ║");
+Console.WriteLine("║       CONSUMER 2: REAL-TIME ALERT DASHBOARD          ║");
 Console.WriteLine("║     Fanout Exchange | Recibe TODAS las alertas       ║");
 Console.WriteLine("╚══════════════════════════════════════════════════════╝\n");
 Console.ResetColor();
@@ -28,4 +28,4 @@ using var consumer = new AlertDashboardConsumer();
 using var cts      = new CancellationTokenSource();
 
 consumer.StartConsuming(cts.Token);
-Console.WriteLine("\n[Dashboard] Detenido. 👋");
+Console.WriteLine("\n[Dashboard] Detenido. ");

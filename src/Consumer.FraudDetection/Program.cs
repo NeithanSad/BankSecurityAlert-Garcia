@@ -20,7 +20,7 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 Console.ForegroundColor = ConsoleColor.Red;
 Console.WriteLine("╔══════════════════════════════════════════════════════╗");
-Console.WriteLine("║  🔍  CONSUMER 1: FRAUD DETECTION SYSTEM             ║");
+Console.WriteLine("║       CONSUMER 1: FRAUD DETECTION SYSTEM             ║");
 Console.WriteLine("║     Topic Exchange | Patrones: critical.# / high.#  ║");
 Console.WriteLine("╚══════════════════════════════════════════════════════╝\n");
 Console.ResetColor();
@@ -29,4 +29,4 @@ using var consumer = new FraudDetectionConsumer();
 using var cts      = new CancellationTokenSource();
 
 consumer.StartConsuming(cts.Token);
-Console.WriteLine("\n[FraudDetection] Detenido. 👋");
+Console.WriteLine("\n[FraudDetection] Detenido.");

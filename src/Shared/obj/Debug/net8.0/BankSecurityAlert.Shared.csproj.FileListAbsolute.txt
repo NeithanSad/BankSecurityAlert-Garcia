@@ -1,0 +1,12 @@
+C:\Dev\RabitMQProject\BA2\src\Shared\bin\Debug\net8.0\BankSecurityAlert.Shared.deps.json
+C:\Dev\RabitMQProject\BA2\src\Shared\bin\Debug\net8.0\BankSecurityAlert.Shared.dll
+C:\Dev\RabitMQProject\BA2\src\Shared\bin\Debug\net8.0\BankSecurityAlert.Shared.pdb
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\BankSecurityAlert.Shared.csproj.AssemblyReference.cache
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\BankSecurityAlert.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\BankSecurityAlert.Shared.AssemblyInfoInputs.cache
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\BankSecurityAlert.Shared.AssemblyInfo.cs
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\BankSecurityAlert.Shared.csproj.CoreCompileInputs.cache
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\BankSecurityAlert.Shared.dll
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\refint\BankSecurityAlert.Shared.dll
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\BankSecurityAlert.Shared.pdb
+C:\Dev\RabitMQProject\BA2\src\Shared\obj\Debug\net8.0\ref\BankSecurityAlert.Shared.dll
