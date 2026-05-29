@@ -1,11 +1,11 @@
-# 🏦 BankSecurityAlert — Sistema de Alertas de Seguridad Bancaria con RabbitMQ
+# BankSecurityAlert — Sistema de Alertas de Seguridad Bancaria con RabbitMQ
 
 > **Caso real:** Sistema de mensajería asíncrona que procesa alertas de seguridad bancaria  
 > usando **tres tipos de Exchange** de RabbitMQ: Topic, Fanout y Direct.
 
 ---
 
-## 📐 Arquitectura del Sistema
+## Arquitectura del Sistema
 
 ```
                     ┌─────────────────────────────────────────────────────┐
@@ -42,7 +42,7 @@
 
 ---
 
-## 🔀 Exchanges y su Rol en el Caso Real
+## Exchanges y su Rol en el Caso Real
 
 ### 1. Topic Exchange — `bank.alerts.topic`
 **Routing Key format:** `{severity}.{category}`  
@@ -69,7 +69,7 @@ Solo alertas High/Critical se envían directamente al usuario afectado.
 
 ---
 
-## 🗂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 BankSecurityAlert/
@@ -100,7 +100,7 @@ BankSecurityAlert/
 
 ---
 
-## 🚀 Pasos para ejecutar
+## Pasos para ejecutar
 
 ### Prerrequisitos
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
