@@ -173,30 +173,19 @@ dotnet run --project src/Producer.csproj
 
 ---
 
-## 📊 Comportamiento esperado por tipo de alerta
-
-| Alerta generada | Topic key | Topic→FraudDetection | Topic→AuditLog | Fanout→Dashboard | Direct→User |
-|---|---|---|---|---|---|
-| `critical.frauddetection` | `critical.frauddetection` | ✅ (critical.#) | ✅ (*.frauddetection) | ✅ siempre | ✅ High/Critical |
-| `high.loginattempt` | `high.loginattempt` | ✅ (high.#) | ✅ (*.loginattempt) | ✅ siempre | ✅ High/Critical |
-| `medium.largetransaction` | `medium.largetransaction` | ❌ | ❌ | ✅ siempre | ❌ |
-| `low.suspiciouslocation` | `low.suspiciouslocation` | ❌ | ❌ | ✅ siempre | ❌ |
-
----
-
-## 🛠 Configuración de RabbitMQ — Referencia
+## Configuración de RabbitMQ — Referencia
 
 ### Virtual Host
 ```
-Nombre: bank-security
+Nombre: /
 ```
 
 ### Exchanges
 | Nombre | Tipo | Durable |
 |---|---|---|
-| `bank.alerts.topic` | topic | ✅ |
-| `bank.alerts.fanout` | fanout | ✅ |
-| `bank.alerts.direct` | direct | ✅ |
+| `bank.alerts.topic` | topic |
+| `bank.alerts.fanout` | fanout |
+| `bank.alerts.direct` | direct |
 
 ### Queues
 | Nombre | Tipo | TTL | Binding |
@@ -208,7 +197,7 @@ Nombre: bank-security
 
 ---
 
-## 🔧 Tecnologías
+## Tecnologías
 
 - **C# .NET 8** — Lenguaje y runtime
 - **RabbitMQ.Client 6.8.1** — Librería oficial de RabbitMQ para .NET
@@ -217,8 +206,3 @@ Nombre: bank-security
 
 ---
 
-## 📚 Referencias
-
-- [RabbitMQ .NET Client Docs](https://www.rabbitmq.com/dotnet-api-guide.html)
-- [Exchange Types](https://www.rabbitmq.com/tutorials/amqp-concepts.html)
-- [Topic Exchange Tutorial](https://www.rabbitmq.com/tutorials/tutorial-five-dotnet.html)
