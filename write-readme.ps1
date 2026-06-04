@@ -1,4 +1,5 @@
-ï»¿# BankSecurityAlert
+$readme = @'
+# BankSecurityAlert
 
 A distributed bank security alert system built with .NET 8, RabbitMQ, and Docker. The architecture follows an event-driven microservices pattern where a central Producer publishes security alerts through multiple RabbitMQ exchange types, and three independent consumers process those alerts according to their specific responsibilities.
 
@@ -42,7 +43,7 @@ A distributed bank security alert system built with .NET 8, RabbitMQ, and Docker
 | Queue | Exchange | Binding / Routing Pattern | Consumed by |
 |---|---|---|---|
 | `queue.fraud.detection` | Topic | `critical.#`, `high.#` | Consumer.FraudDetection |
-| `queue.dashboard.fanout` | Fanout | (all â€” no key required) | Consumer.AlertDashboard |
+| `queue.dashboard.fanout` | Fanout | (all — no key required) | Consumer.AlertDashboard |
 | `queue.audit.log` | Topic | `#` (all messages) | Consumer.AuditLog |
 | `queue.user.direct` | Direct | `user.<userId>` | Consumer.AuditLog |
 
@@ -98,12 +99,12 @@ Class library referenced by all projects. Contains the domain model, the RabbitM
 
 Routing keys are computed from the alert fields:
 
-- **Topic key** â€” `{severity}.{category}`, for example: `critical.frauddetection`, `high.loginattempt`
-- **Direct key** â€” `user.{userId}`, for example: `user.USR-001`
+- **Topic key** — `{severity}.{category}`, for example: `critical.frauddetection`, `high.loginattempt`
+- **Direct key** — `user.{userId}`, for example: `user.USR-001`
 
 ---
 
-## REST API â€” Consumer.AuditLog
+## REST API — Consumer.AuditLog
 
 Base URL (Docker): `http://localhost:8080`
 
@@ -160,7 +161,7 @@ Returns a single audit entry by its internal auto-incremented ID.
 |---|---|---|
 | `id` | `int` | Internal audit entry ID |
 
-**Response 200** â€” Returns the full `AuditEntry` object (same shape as items in the list above).
+**Response 200** — Returns the full `AuditEntry` object (same shape as items in the list above).
 
 **Response 404**
 
@@ -230,9 +231,9 @@ This command builds and starts all five services:
 | Container | Role | Exposed Port |
 |---|---|---|
 | `rabbitmq` | Message broker with management UI | `5672`, `15672` |
-| `producer` | Publishes security alerts continuously | â€” |
-| `consumer-fraud` | Fraud Detection consumer | â€” |
-| `consumer-dashboard` | Alert Dashboard consumer | â€” |
+| `producer` | Publishes security alerts continuously | — |
+| `consumer-fraud` | Fraud Detection consumer | — |
+| `consumer-dashboard` | Alert Dashboard consumer | — |
 | `consumer-auditlog` | Audit Log consumer and REST API | `8080` |
 
 After startup:
@@ -281,9 +282,9 @@ src/
         RabbitMQTopology.cs   # Declares exchanges, queues, and bindings
         AlertPublisher.cs     # Publishes to Topic, Fanout, and Direct
     BaseAlertConsumer.cs      # Abstract base for all consumers
-  Producer/               # Alert generator â€” console application
-  Consumer.FraudDetection/  # Topic consumer (critical/high only) â€” console
-  Consumer.AlertDashboard/  # Fanout consumer (all alerts) â€” console
+  Producer/               # Alert generator — console application
+  Consumer.FraudDetection/  # Topic consumer (critical/high only) — console
+  Consumer.AlertDashboard/  # Fanout consumer (all alerts) — console
   Consumer.AuditLog/      # Topic consumer (all) + SQLite + REST API
     AuditRepository.cs    # SQLite data access
     AuditWorker.cs        # Background service for RabbitMQ consumption
@@ -316,3 +317,7 @@ RabbitMQ connection constants (port `5672`, virtual host `bank-security`, exchan
 | Database | SQLite via Microsoft.Data.Sqlite |
 | HTTP API framework | ASP.NET Core Minimal APIs |
 | Containerisation | Docker and Docker Compose |
+'@
+
+Set-Content -Path "C:\Dev\RabitMQProject\BA2\README.md" -Value $readme -Encoding UTF8
+Write-Host "README written."

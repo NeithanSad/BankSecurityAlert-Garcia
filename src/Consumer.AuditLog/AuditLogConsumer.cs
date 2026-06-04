@@ -1,62 +1,59 @@
-﻿using BankSecurityAlert.Domain;
+﻿
+using BankSecurityAlert.Consumers;
+using BankSecurityAlert.Domain;
 using BankSecurityAlert.Infrastructure.Config;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BankSecurityAlert.Consumers.AuditLog
+namespace BankSecurityAlert.Consumers.AuditLog;
+
+public class AuditLogConsumer : BaseAlertConsumer
 {
-    internal class AuditLogConsumer : BaseAlertConsumer
+    private readonly AuditRepository _repo;
+
+    public AuditLogConsumer(AuditRepository repo)
     {
-        protected override string QueueName => RabbitMQConstants.AuditLogQueue;
-        protected override string ConsumerName => "AuditLog";
-        protected override ConsoleColor AccentColor => ConsoleColor.Green;
-
-        private static int _auditEntryNumber = 1000;
-
-        protected override void ProcessAlert(SecurityAlert alert, string routingKey)
-        {
-            var entryId = ++_auditEntryNumber;
-            var complianceTag = ClassifyCompliance(alert);
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"  📋 ENTRADA DE AUDITORÍA #{entryId}");
-            Console.WriteLine($"  ┌─ ID Alerta  : {alert.Id}");
-            Console.WriteLine($"  ├─ RoutingKey : {routingKey}");
-            Console.WriteLine($"  ├─ Usuario    : {alert.UserId} | {alert.UserEmail}");
-            Console.WriteLine($"  ├─ Evento     : [{alert.Category}] {alert.Message}");
-            Console.WriteLine($"  ├─ Severidad  : {alert.Severity}");
-            Console.WriteLine($"  ├─ Origen     : {alert.SourceIp} — {alert.Country}");
-            if (alert.TransactionAmount.HasValue)
-                Console.WriteLine($"  ├─ Monto      : ${alert.TransactionAmount:N2}");
-            Console.WriteLine($"  ├─ Timestamp  : {alert.OccurredAt:O}");
-            Console.WriteLine($"  └─ Compliance : {complianceTag}");
-            Console.ResetColor();
-
-            // Simulate writing to audit file / database
-            WriteAuditEntry(entryId, alert, routingKey);
-        }
-
-        private static string ClassifyCompliance(SecurityAlert alert) =>
-            alert.Category switch
-            {
-                AlertCategory.FraudDetection => "🔒 PCI-DSS Section 10.6 | Revisión requerida en 24h",
-                AlertCategory.LoginAttempt => "🔐 ISO 27001 A.9.4.2 | Acceso no autorizado",
-                AlertCategory.LargeTransaction => "💰 FATF Recomendación 10 | Monitoreo AML",
-                AlertCategory.AccountLockout => "🔒 PCI-DSS Section 8.1.6 | Lockout policy",
-                _ => "📄 Evento estándar de auditoría"
-            };
-
-        private static void WriteAuditEntry(int entryId, SecurityAlert alert, string routingKey)
-        {
-            // In production: write to Elasticsearch / database / S3
-            var logLine = $"AUDIT|{entryId}|{alert.OccurredAt:O}|{alert.UserId}|{alert.Category}|{alert.Severity}|{routingKey}";
-
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            Console.WriteLine($"  💾 LOG: {logLine}");
-            Console.ResetColor();
-        }
+        _repo = repo;
     }
+
+    protected override string QueueName => RabbitMQConstants.AuditLogQueue;
+    protected override string ConsumerName => "AuditLog";
+    protected override ConsoleColor AccentColor => ConsoleColor.Green;
+
+    protected override void ProcessAlert(SecurityAlert alert, string routingKey)
+    {
+        var complianceTag = ClassifyCompliance(alert);
+
+        var entry = new AuditEntry
+        {
+            AlertId = alert.Id.ToString(),
+            RoutingKey = routingKey,
+            UserId = alert.UserId,
+            UserEmail = alert.UserEmail,
+            Category = alert.Category.ToString(),
+            Severity = alert.Severity.ToString(),
+            Message = alert.Message,
+            SourceIp = alert.SourceIp,
+            Country = alert.Country,
+            Amount = alert.TransactionAmount,
+            ComplianceTag = complianceTag,
+            OccurredAt = alert.OccurredAt.ToString("O"),
+            ProcessedAt = DateTime.UtcNow.ToString("O"),
+        };
+
+        _repo.Save(entry);
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"  📋 [{alert.Severity}] {alert.Category} | {alert.UserId} | {complianceTag}");
+        Console.WriteLine($"  💾 Guardado en SQLite — RoutingKey: {routingKey}");
+        Console.ResetColor();
+    }
+
+    private static string ClassifyCompliance(SecurityAlert alert) =>
+        alert.Category switch
+        {
+            AlertCategory.FraudDetection => "PCI-DSS Section 10.6",
+            AlertCategory.LoginAttempt => "ISO 27001 A.9.4.2",
+            AlertCategory.LargeTransaction => "FATF Recomendacion 10",
+            AlertCategory.AccountLockout => "PCI-DSS Section 8.1.6",
+            _ => "Evento estandar de auditoria"
+        };
 }

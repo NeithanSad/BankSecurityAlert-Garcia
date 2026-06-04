@@ -1,24 +1,81 @@
+
 version: "3.8"
 
 services:
+
   rabbitmq:
     image: rabbitmq:3.12-management
-    container_name: rabbitmq-bank-security
+    container_name: rabbitmq
     ports:
-      - "5672:5672"    # AMQP
-      - "15672:15672"  # Management UI
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-      #- ./rabbitmq-setup/definitions.json:/etc/rabbitmq/definitions.json
+      - ./rabbitmq-setup/definitions.json:/etc/rabbitmq/definitions.json
       - ./rabbitmq-setup/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+
+  producer:
+    build:
+      context: .
+      dockerfile: src/Producer/Dockerfile
+    container_name: producer
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  consumer-fraud:
+    build:
+      context: .
+      dockerfile: src/Consumer.FraudDetection/Dockerfile
+    container_name: consumer-fraud
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  consumer-dashboard:
+    build:
+      context: .
+      dockerfile: src/Consumer.AlertDashboard/Dockerfile
+    container_name: consumer-dashboard
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  consumer-auditlog:
+    build:
+      context: .
+      dockerfile: src/Consumer.AuditLog/Dockerfile
+    container_name: consumer-auditlog
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - DB_PATH=/data/audit.db
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - auditlog_data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
 
 volumes:
   rabbitmq_data:
+  auditlog_data:

@@ -5,8 +5,7 @@
   "users": [
     {
       "name": "guest",
-      "password_hash": "8LOwjC8g6xNrMDO7pAyVBFbQYAkK6T4LnfFJfC9BQ=",
-      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "password": "guest",
       "tags": "administrator"
     }
   ],
