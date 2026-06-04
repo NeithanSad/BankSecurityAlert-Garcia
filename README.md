@@ -1,16 +1,16 @@
 ﻿# BankSecurityAlert
 
-A distributed bank security alert system built with .NET 8, RabbitMQ, and Docker. The architecture follows an event-driven microservices pattern where a central Producer publishes security alerts through multiple RabbitMQ exchange types, and three independent consumers process those alerts according to their specific responsibilities.
+Un sistema distribuido de alertas de seguridad bancaria construido con .NET 8, RabbitMQ y Docker. La arquitectura sigue un patrón de microservicios orientados a eventos, donde un Productor central publica alertas de seguridad a través de múltiples tipos de exchanges (intercambiadores) de RabbitMQ, y tres consumidores independientes procesan estas alertas de acuerdo con sus responsabilidades específicas.
 
 ---
 
-## Architecture Overview
+## Resumen de la Arquitectura
 
 ```
-                        +---------------------+
-                        |      Producer       |
-                        |   (Alert Generator) |
-                        +----------+----------+
+                        +----------------------+
+                        |      Productor       |
+                        | (Generador Alertas)  |
+                        +----------+-----------+
                                    |
               +--------------------+--------------------+
               |                    |                    |
@@ -18,109 +18,83 @@ A distributed bank security alert system built with .NET 8, RabbitMQ, and Docker
    bank.alerts.topic      bank.alerts.fanout    bank.alerts.direct
               |                    |                    |
     +---------+---------+ +--------+---------+ +--------+---------+
-    | Patterns:         | | Receives ALL     | | Key:             |
-    |  critical.#       | | alerts           | |  user.<userId>   |
-    |  high.#           | | (broadcast)      | |  (targeted)      |
+    | Patrones:         | | Recibe TODAS     | | Clave:           |
+    |  critical.#       | | las alertas      | |  user.<userId>   |
+    |  high.#           | | (difusión)       | |  (objetivo)      |
     +---------+---------+ +--------+---------+ +--------+---------+
               |                    |                    |
     +---------+---------+ +--------+---------+ +--------+---------+
-    | Consumer 1        | | Consumer 2        | | Consumer 3       |
-    | Fraud Detection   | | Alert Dashboard   | | Audit Log API    |
+    | Consumidor 1      | | Consumidor 2      | | Consumidor 3     |
+    | Detección Fraude  | | Panel de Alertas  | | API de Auditoría |
     +-------------------+ +-------------------+ +------------------+
 ```
 
-### Exchange Strategy
+### Estrategia de Exchanges
 
-| Exchange | Type | Purpose |
+| Exchange | Tipo | Propósito |
 |---|---|---|
-| `bank.alerts.topic` | Topic | Routes alerts by severity and category using wildcard patterns |
-| `bank.alerts.fanout` | Fanout | Broadcasts every alert to all bound queues unconditionally |
-| `bank.alerts.direct` | Direct | Routes alerts to a specific user queue by exact key |
+| `bank.alerts.topic` | Topic | Enruta alertas según patrones de severidad y categoría utilizando comodines |
+| `bank.alerts.fanout` | Fanout | Difunde cada alerta a todas las colas vinculadas de forma incondicional |
+| `bank.alerts.direct` | Direct | Enruta alertas a una cola de usuario específica mediante coincidencia exacta |
 
-### Queues and Bindings
+### Colas y Enrutamiento (Bindings)
 
-| Queue | Exchange | Binding / Routing Pattern | Consumed by |
+| Cola | Exchange | Patrón de Enrutamiento | Consumido por |
 |---|---|---|---|
 | `queue.fraud.detection` | Topic | `critical.#`, `high.#` | Consumer.FraudDetection |
-| `queue.dashboard.fanout` | Fanout | (all — no key required) | Consumer.AlertDashboard |
-| `queue.audit.log` | Topic | `#` (all messages) | Consumer.AuditLog |
+| `queue.dashboard.fanout` | Fanout | (todas) | Consumer.AlertDashboard |
+| `queue.audit.log` | Topic | `#` (todas las alertas) | Consumer.AuditLog |
 | `queue.user.direct` | Direct | `user.<userId>` | Consumer.AuditLog |
 
 ---
 
-## Projects
+## Proyectos (Microservicios)
 
-### Producer
+### Producer (Productor)
 
-Console application that generates randomized `SecurityAlert` events and publishes them simultaneously to the Topic, Fanout, and Direct exchanges.
+Aplicación de consola que genera eventos aleatorios tipo `SecurityAlert` y los publica simultáneamente a los exchanges Topic, Fanout y Direct.
 
-When the `RABBITMQ_HOST` environment variable is present (Docker mode), it runs automatically and publishes one alert every 3 seconds. When that variable is absent (local mode), it enters an interactive prompt.
+Cuando la variable de entorno `RABBITMQ_HOST` está configurada (por ejemplo, en Docker), se ejecuta de forma automática y publica una alerta cada 3 segundos. Si falta la variable de entorno, entra en modo interactivo para uso local.
 
-### Consumer.FraudDetection
+### Consumer.FraudDetection (Detección de Fraudes)
 
-Console application that subscribes to the **Topic Exchange** using the binding patterns `critical.#` and `high.#`. It only receives alerts of severity `High` or `Critical`, evaluates a risk score, and flags cases for immediate review.
+Aplicación de consola que se suscribe al **Topic Exchange** utilizando los patrones `critical.#` y `high.#`. Solo recibe alertas con severidad `High` o `Critical`, evalúa una puntuación de riesgo y marca los casos para revisión inmediata.
 
-### Consumer.AlertDashboard
+### Consumer.AlertDashboard (Panel de Alertas)
 
-Console application that subscribes to the **Fanout Exchange**. It receives every alert regardless of routing key and simulates a real-time monitoring dashboard with severity counters.
+Aplicación de consola que se suscribe al **Fanout Exchange**. Recibe todas las alertas sin importar su clave de enrutamiento y simula un panel de monitoreo en tiempo real actualizando los contadores de severidad.
 
-### Consumer.AuditLog
+### Consumer.AuditLog (Registro de Auditoría y API)
 
-ASP.NET Core application that combines two responsibilities:
+Aplicación en ASP.NET Core que combina dos responsabilidades:
 
-- A background worker (`AuditWorker`) that subscribes to the **Topic Exchange** with pattern `#` and persists every alert to a SQLite database.
-- A Minimal API that exposes the stored audit records over HTTP on port `8080`.
+- Un proceso en segundo plano (`AuditWorker`) que se suscribe al **Topic Exchange** con el patrón `#` (todas las alertas) y las guarda mediante persistencia en una base de datos SQLite.
+- Una Minimal API que expone los registros de auditoría almacenados a través de HTTP en el puerto `8080`.
 
-This is the only microservice that exposes HTTP endpoints.
+Este es el único microservicio que cuenta con endpoints HTTP.
 
 ### BankSecurityAlert.Shared
 
-Class library referenced by all projects. Contains the domain model, the RabbitMQ topology declaration, exchange and queue name constants, the publisher, and the base consumer abstraction.
+Librería de clases común que es referenciada por todos los demás proyectos. Contiene el modelo de dominio, la sintaxis de topología de RabbitMQ, las constantes de colas y exchanges, la lógica de publicación, y la clase abstracta para todos los consumidores.
 
 ---
 
-## Domain Model
+## Endpoints de la API REST — Consumer.AuditLog
 
-### SecurityAlert
-
-| Property | Type | Description |
-|---|---|---|
-| `Id` | `Guid` | Unique alert identifier, auto-generated |
-| `UserId` | `string` | Identifier of the affected user |
-| `UserEmail` | `string` | Email of the affected user |
-| `Severity` | `AlertSeverity` | `Low`, `Medium`, `High`, or `Critical` |
-| `Category` | `AlertCategory` | `FraudDetection`, `LoginAttempt`, `LargeTransaction`, `AccountLockout`, or `SuspiciousLocation` |
-| `Message` | `string` | Human-readable description of the alert |
-| `SourceIp` | `string` | IP address that originated the event |
-| `Country` | `string` | Country of origin |
-| `TransactionAmount` | `decimal?` | Monetary amount involved, if applicable |
-| `OccurredAt` | `DateTime` | UTC timestamp of the event |
-
-Routing keys are computed from the alert fields:
-
-- **Topic key** — `{severity}.{category}`, for example: `critical.frauddetection`, `high.loginattempt`
-- **Direct key** — `user.{userId}`, for example: `user.USR-001`
-
----
-
-## REST API — Consumer.AuditLog
-
-Base URL (Docker): `http://localhost:8080`
-
----
+URL Base (Docker): `http://localhost:8080`
 
 ### GET /api/alerts
 
-Returns a paginated list of all alerts that have been consumed and persisted.
+Retorna una lista paginada de todas las alertas consumidas y almacenadas.
 
-**Query parameters**
+**Parámetros de Consulta (Query)**
 
-| Parameter | Type | Default | Description |
+| Parámetro | Tipo | Por defecto | Descripción |
 |---|---|---|---|
-| `page` | `int` | `1` | Page number (1-based) |
-| `pageSize` | `int` | `20` | Number of records per page |
+| `page` | `int` | `1` | Número de página |
+| `pageSize` | `int` | `20` | Número de registros por página |
 
-**Response 200**
+**Respuesta 200**
 
 ```json
 {
@@ -136,7 +110,7 @@ Returns a paginated list of all alerts that have been consumed and persisted.
       "userEmail": "user@example.com",
       "category": "FraudDetection",
       "severity": "Critical",
-      "message": "Suspicious transaction detected",
+      "message": "Transaccion sospechosa detectada",
       "sourceIp": "192.168.1.1",
       "country": "MX",
       "amount": 15000.00,
@@ -152,31 +126,24 @@ Returns a paginated list of all alerts that have been consumed and persisted.
 
 ### GET /api/alerts/{id}
 
-Returns a single audit entry by its internal auto-incremented ID.
+Retorna una sola entrada de auditoría mediante su ID (autoincremental).
 
-**Path parameters**
+**Parámetros de Ruta (Path)**
 
-| Parameter | Type | Description |
+| Parámetro | Tipo | Descripción |
 |---|---|---|
-| `id` | `int` | Internal audit entry ID |
+| `id` | `int` | ID interno de la entrada de auditoría |
 
-**Response 200** — Returns the full `AuditEntry` object (same shape as items in the list above).
-
-**Response 404**
-
-```json
-{
-  "message": "Entrada 99 no encontrada"
-}
-```
+**Respuesta 200** — Retorna el objeto `AuditEntry` correspondiente de la base de datos.
+**Respuesta 404** — Si el registro no se encuentra, retorna un mensaje con código de error.
 
 ---
 
 ### GET /api/alerts/stats
 
-Returns aggregated alert counts grouped by severity and by category.
+Retorna los conteos globales agrupados por nivel de severidad y por categoría.
 
-**Response 200**
+**Respuesta 200**
 
 ```json
 {
@@ -199,9 +166,9 @@ Returns aggregated alert counts grouped by severity and by category.
 
 ### GET /health
 
-Basic health check to confirm the service is running.
+Punto de control de salud para confirmar que la API web se encuentra activa.
 
-**Response 200**
+**Respuesta 200**
 
 ```json
 {
@@ -212,44 +179,38 @@ Basic health check to confirm the service is running.
 
 ---
 
-## Getting Started
+## Cómo Empezar
 
-### Prerequisites
+### Requisitos Previos
 
-- [Docker](https://www.docker.com/) and Docker Compose
-- .NET 8 SDK (required only for local development without Docker)
+- [Docker](https://www.docker.com/) y Docker Compose
+- .NET 8 SDK (Requerido solo para desarrollo local sin Docker)
 
-### Run with Docker Compose
+### Ejecución usando Docker Compose
 
 ```bash
 docker compose up --build
 ```
 
-This command builds and starts all five services:
+Esto iniciará los cinco servicios definidos:
 
-| Container | Role | Exposed Port |
+| Contenedor | Descripción | Puerto Expuesto |
 |---|---|---|
-| `rabbitmq` | Message broker with management UI | `5672`, `15672` |
-| `producer` | Publishes security alerts continuously | — |
-| `consumer-fraud` | Fraud Detection consumer | — |
-| `consumer-dashboard` | Alert Dashboard consumer | — |
-| `consumer-auditlog` | Audit Log consumer and REST API | `8080` |
+| `rabbitmq` | Broker de mensajes con la interfaz de gestión UI | `5672`, `15672` |
+| `producer` | Publica de manera automática alertas | — |
+| `consumer-fraud` | Consumidor de detección de fraude | — |
+| `consumer-dashboard` | Consumidor de panel general | — |
+| `consumer-auditlog` | Consumidor de auditoría y API REST | `8080` |
 
-After startup:
+Una vez en marcha:
 
-- RabbitMQ Management UI: http://localhost:15672  (credentials: `guest` / `guest`)
-- Audit Log API: http://localhost:8080/api/alerts
+- Management UI de RabbitMQ: http://localhost:15672 (Credenciales: `guest` / `guest`)
+- API REST Audit Log: http://localhost:8080/api/alerts
 
-### Run Locally Without Docker
+### Desarrollo Local (sin Docker)
 
-1. Start a local RabbitMQ instance and create the virtual host `bank-security`:
-
-```bash
-rabbitmqctl add_vhost bank-security
-rabbitmqctl set_permissions -p bank-security guest ".*" ".*" ".*"
-```
-
-2. Run each project in a separate terminal from the repository root:
+1. Iniciar un contenedor/instancia local de RabbitMQ y crear un Virtual Host `bank-security`.
+2. Lanzar cada microservicio en diferentes ventanas de la consola de comandos:
 
 ```bash
 dotnet run --project src/Consumer.FraudDetection
@@ -257,62 +218,3 @@ dotnet run --project src/Consumer.AlertDashboard
 dotnet run --project src/Consumer.AuditLog
 dotnet run --project src/Producer
 ```
-
-The Producer will enter interactive mode (press `A` for auto, `Enter` to send one alert, `Q` to quit) when `RABBITMQ_HOST` is not set.
-
----
-
-## Project Structure
-
-```
-BankSecurityAlert.sln
-docker-compose.yml
-rabbitmq-setup/
-  definitions.json        # Pre-configured exchanges, queues, and bindings
-  rabbitmq.conf
-src/
-  Shared/                 # Shared library used by all projects
-    Domain/
-      SecurityAlert.cs    # Domain model and enums
-    Infrastructure/
-      Config/
-        RabbitMQConstants.cs  # Exchange, queue, and routing key names
-      RabbitMQ/
-        RabbitMQTopology.cs   # Declares exchanges, queues, and bindings
-        AlertPublisher.cs     # Publishes to Topic, Fanout, and Direct
-    BaseAlertConsumer.cs      # Abstract base for all consumers
-  Producer/               # Alert generator — console application
-  Consumer.FraudDetection/  # Topic consumer (critical/high only) — console
-  Consumer.AlertDashboard/  # Fanout consumer (all alerts) — console
-  Consumer.AuditLog/      # Topic consumer (all) + SQLite + REST API
-    AuditRepository.cs    # SQLite data access
-    AuditWorker.cs        # Background service for RabbitMQ consumption
-    Program.cs            # Minimal API endpoints
-```
-
----
-
-## Configuration
-
-All services read connection parameters at startup. The RabbitMQ host is resolved from the environment, defaulting to `localhost` for local development.
-
-| Environment Variable | Default | Used by | Description |
-|---|---|---|---|
-| `RABBITMQ_HOST` | `localhost` | All services | RabbitMQ broker hostname |
-| `DB_PATH` | `audit.db` | Consumer.AuditLog | Path to the SQLite database file |
-| `ASPNETCORE_URLS` | `http://+:8080` | Consumer.AuditLog | Address the HTTP server binds to |
-
-RabbitMQ connection constants (port `5672`, virtual host `bank-security`, exchange and queue names) are centralised in `src/Shared/Infrastructure/Config/RabbitMQConstants.cs`.
-
----
-
-## Technology Stack
-
-| Layer | Technology |
-|---|---|
-| Runtime | .NET 8 |
-| Message broker | RabbitMQ 3.12 |
-| RabbitMQ client | RabbitMQ.Client |
-| Database | SQLite via Microsoft.Data.Sqlite |
-| HTTP API framework | ASP.NET Core Minimal APIs |
-| Containerisation | Docker and Docker Compose |
